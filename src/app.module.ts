@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ChatModule } from './chat/chat.module';
 
 @Module({
-  imports: [ChatModule],
+  imports: [
+    ChatModule,
+    TypeOrmModule.forRoot(),
+    // TypeOrmModule.forFeature([MyEntity]),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
