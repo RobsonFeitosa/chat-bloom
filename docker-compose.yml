@@ -1,0 +1,14 @@
+version: '3.8'
+
+services: 
+  mysql:
+    image: mysql:latest
+    container_name: mysql-chat-bloom 
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:  
+      MYSQL_DATABASE: chat-bloom-nexus  
+      MYSQL_ROOT_PASSWORD: fcac41078f2abd6c272b8601a8511f0c 
+    volumes:
+      - ./scripts:/docker-entrypoint-initdb.d
