@@ -17,7 +17,7 @@ export class CreateRoom {
     private typeormRoomsRepository: TypeormRoomsRepository,
   ) {}
 
-  async execute(request: CreateRoomRequest): Promise<void> {
+  async execute(request: CreateRoomRequest): Promise<Room> {
     const { name, user_id } = request;
     const user = await this.typeormUsersRepository.findById(user_id);
 
@@ -30,6 +30,7 @@ export class CreateRoom {
     room.name = name;
     room.user = user;
 
-    await this.typeormRoomsRepository.create(room);
+    const newRoom = await this.typeormRoomsRepository.create(room);
+    return newRoom;
   }
 }
