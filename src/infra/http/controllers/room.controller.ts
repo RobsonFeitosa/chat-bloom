@@ -5,8 +5,6 @@ import {
   Body,
   Controller,
   Post,
-  HttpCode,
-  HttpStatus,
   UseGuards,
   Request,
   Get,
@@ -20,7 +18,6 @@ export class RoomController {
     private readonly indexRoom: IndexRoom,
   ) {}
 
-  @HttpCode(HttpStatus.OK)
   @Post('/')
   @UseGuards(AuthGuard)
   async create(@Body() body: CreateRoomBody, @Request() req) {
@@ -28,7 +25,7 @@ export class RoomController {
 
     const user_id = req.user.sub;
 
-    await this.createRoom.execute({ name, user_id });
+    return await this.createRoom.execute({ name, user_id });
   }
 
   @Get('/')
