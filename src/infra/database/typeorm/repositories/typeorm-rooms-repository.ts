@@ -7,8 +7,8 @@ import { Room } from '@app/entities/room';
 export class TypeormRoomsRepository implements RoomsRepository {
   constructor(private typeorm: TypeOrmService) {}
 
-  async create(room: Omit<Room, 'id'>): Promise<void> {
-    this.typeorm.getEntityManager().save(room);
+  async create(room: Room): Promise<Room> {
+    return this.typeorm.getEntityManager().save(room);
   }
 
   async findById(id: number): Promise<Room | null> {
