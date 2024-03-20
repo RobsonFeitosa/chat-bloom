@@ -7,14 +7,29 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { CreateRoom } from '@app/use-cases/rooms/create-room';
+import { EntityTypeEnum } from '@infra/enum/entity-type';
+import { Room } from '@app/entities/room';
 
-interface Message {
+interface ChatBody {
   msg: string;
   user: {
     id: string;
     name: string;
   };
   room_id: number;
+}
+
+interface RoomBody {
+  id: number;
+  name: string;
+}
+
+interface Message {
+  type: EntityTypeEnum;
+  user_id: string;
+  chat_body: ChatBody;
+  room_body: RoomBody;
 }
 
 @WebSocketGateway({
@@ -28,7 +43,10 @@ export class ChatGateway implements OnModuleInit {
 
   private readonly logger = new Logger(ChatGateway.name);
 
-  constructor(private createChat: CreateChat) {}
+  constructor(
+    private createChat: CreateChat,
+    private createRoom: CreateRoom,
+  ) {}
 
   onModuleInit() {
     this.server.on('connection', (socket) => this.handleConnection(socket));
@@ -38,7 +56,6 @@ export class ChatGateway implements OnModuleInit {
   async onNewMessage(@MessageBody() body: Message) {
     try {
       await this.handleNewMessage(body);
-      console.log({ body });
     } catch (error: any) {
       this.logger.error(`Error processing new message: ${error.message}`);
     }
@@ -48,24 +65,47 @@ export class ChatGateway implements OnModuleInit {
     this.logger.log(`Client connected: ${socket.id}`);
   }
 
-  private async saveChat(message: Message) {
+  private async handleNewMessage(message: Message) {
+    this.logger.log(`Received new message from user ${message.user_id}`);
+
+    switch (message.type) {
+      case EntityTypeEnum.CHAT:
+        await this.saveChat(message.chat_body);
+        break;
+      case EntityTypeEnum.ROOM:
+        const room = await this.saveRoom(message.room_body, message.user_id);
+
+        message.room_body.id = room.id;
+        break;
+      default:
+        this.logger.warn('Unknown entity type');
+        break;
+    }
+
+    this.server.emit('onMessage', {
+      msg: 'New Message',
+      content: message,
+    });
+  }
+
+  private async saveChat(message: ChatBody) {
     await this.createChat.execute({
       message: message.msg,
       room_id: message.room_id,
       user_id: message.user.id,
     });
 
-    this.logger.log('Message saved successfully');
+    this.logger.log('Chat message saved successfully');
   }
 
-  private async handleNewMessage(message: Message) {
-    this.logger.log(`Received new message from user ${message.user.id}`);
-
-    this.server.emit('onMessage', {
-      msg: 'New Message',
-      content: message,
+  private async saveRoom(message: RoomBody, user_id: string): Promise<Room> {
+    const room = await this.createRoom.execute({
+      name: message.name,
+      user_id,
     });
 
-    await this.saveChat(message);
+    this.logger.log('Room message saved successfully');
+
+    return room;
   }
 }
