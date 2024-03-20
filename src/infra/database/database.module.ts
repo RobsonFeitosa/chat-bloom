@@ -3,6 +3,8 @@ import { TypeormUsersRepository } from './typeorm/repositories/typeorm-users-rep
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmService } from './typeorm/typeorm.service';
+import { TypeormRoomsRepository } from './typeorm/repositories/typeorm-rooms-repository';
+import { TypeormChatsRepository } from './typeorm/repositories/typeorm-chats-repository';
 
 @Module({
   imports: [
@@ -20,7 +22,17 @@ import { TypeOrmService } from './typeorm/typeorm.service';
       }),
     }),
   ],
-  providers: [TypeOrmService, TypeormUsersRepository],
-  exports: [TypeOrmService, TypeormUsersRepository],
+  providers: [
+    TypeOrmService,
+    TypeormUsersRepository,
+    TypeormRoomsRepository,
+    TypeormChatsRepository,
+  ],
+  exports: [
+    TypeOrmService,
+    TypeormUsersRepository,
+    TypeormRoomsRepository,
+    TypeormChatsRepository,
+  ],
 })
 export class DatabaseModule {}
