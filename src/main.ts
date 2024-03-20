@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { config } from 'dotenv';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 config();
 
@@ -10,10 +11,15 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
-  console.log(process.env.DB_MYSQL_USERNAME);
-  console.log(process.env.DB_MYSQL_PASSWORD);
-  console.log(process.env.DB_MYSQL_DATABASE);
+  const corsOptions: CorsOptions = {
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  };
 
-  await app.listen(3000);
+  app.enableCors(corsOptions);
+
+  await app.listen(3333);
 }
 bootstrap();
