@@ -10,4 +10,20 @@ export class TypeormUsersRepository implements UsersRepository {
   async create(user: User): Promise<void> {
     this.typeorm.getEntityManager().save(user);
   }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.typeorm.getEntityManager().findOne(User, {
+      where: {
+        email,
+      },
+    });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.typeorm.getEntityManager().findOne(User, {
+      where: {
+        id,
+      },
+    });
+  }
 }
