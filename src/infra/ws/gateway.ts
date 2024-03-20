@@ -1,12 +1,12 @@
 import { CreateChat } from '@app/use-cases/chats/create-chat';
-import { OnModuleInit } from '@nestjs/common';
+import { Logger, OnModuleInit } from '@nestjs/common';
 import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 interface Message {
   msg: string;
@@ -26,23 +26,26 @@ export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
+  private readonly logger = new Logger(ChatGateway.name);
+
   constructor(private createChat: CreateChat) {}
 
   onModuleInit() {
-    this.server.on('connection', (socket) => {
-      console.log(socket.id);
-      console.log('connected');
-    });
+    this.server.on('connection', (socket) => this.handleConnection(socket));
   }
 
   @SubscribeMessage('newMessage')
-  onNewMessage(@MessageBody() body: Message) {
-    this.server.emit('onMessage', {
-      msg: 'New Message',
-      content: body,
-    });
+  async onNewMessage(@MessageBody() body: Message) {
+    try {
+      await this.handleNewMessage(body);
+      console.log({ body });
+    } catch (error: any) {
+      this.logger.error(`Error processing new message: ${error.message}`);
+    }
+  }
 
-    this.saveChat(body);
+  private async handleConnection(socket: Socket) {
+    this.logger.log(`Client connected: ${socket.id}`);
   }
 
   private async saveChat(message: Message) {
@@ -51,5 +54,18 @@ export class ChatGateway implements OnModuleInit {
       room_id: message.room_id,
       user_id: message.user.id,
     });
+
+    this.logger.log('Message saved successfully');
+  }
+
+  private async handleNewMessage(message: Message) {
+    this.logger.log(`Received new message from user ${message.user.id}`);
+
+    this.server.emit('onMessage', {
+      msg: 'New Message',
+      content: message,
+    });
+
+    await this.saveChat(message);
   }
 }
